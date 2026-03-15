@@ -49,27 +49,46 @@ def k_fold_validation(k, dataset, features):
             total += 1
     return correct/total
 
+def search_instance(search, features, dataset, search_type):
+    """Given an instance of features, tests each possible insertion / removal based on the type
+    Args:
+        search (set): Set of all features to search through
+        features (set): Set of the current features beign used
+        dataset (list[list]): 
+        search_type (bool): 0 - Forward Selection, 1 - Backwards Elimination
+    Returns:
+        float, set: The highest score achieved and the best feature
+    """
+    curr_max_score = 0
+    curr_best_feature = None
+    for i in search:
+        if search_type == 0:
+            features.add(i)
+        else:
+            features.remove(i)
+        score = k_fold_validation(5, dataset, features)
+        print(f"Currently testing feature {i}. Score: {score}")
+        if score > curr_max_score: 
+            curr_max_score = score
+            curr_best_feature = i
+        if search_type == 0:
+            features.remove(i)
+        else:
+            features.add(i)
+    return curr_max_score, curr_best_feature
+
 #Fix: add a single feature rather than adding all
 def forward_search(dataset):
     '''
-    Forward Search that searches while adding features
+    Forward Search that adds the feature that improves accuracy the most
     '''
     features = set() # Current Features to Test
     search = set(range(1,len(dataset[0]))) # Current features to search
     max_score = 0
     best_features = None
     for x in range(len(search)):
-        curr_max_score = 0
-        curr_best_feature = None
         print(f"On level {x} of the search tree. Current features: {features}")
-        for i in search:
-            features.add(i)
-            score = k_fold_validation(5, dataset, features)
-            print(f"Currently testing feature {i}. Score: {score}")
-            if score > curr_max_score: 
-                curr_max_score = score
-                curr_best_feature = i
-            features.remove(i)
+        curr_max_score, curr_best_feature = search_instance(search, features, dataset, 0)
         if curr_best_feature == None:
             print("Error: No Best Feature Found")
             break
@@ -80,16 +99,25 @@ def forward_search(dataset):
             max_score = curr_max_score
             best_features = features.copy()
     return max_score, best_features            
-  
+
 def backward_search(dataset):
     '''
-    Backwards serach that searches while removing features
+    Backwards search that elimates features to improve accuracy
     '''
     features = set(range(1,len(dataset[0])))
-    search = set(range(1,len(dataset[0])))
-    max_accuracy = 0
-    best_features = 0
-
-
-
-        
+    search = set(range(1,len(dataset[0]))) # Current features to search
+    max_score = 0
+    best_features = None
+    for x in range(len(search)):
+        print(f"On level {x} of the search tree. Current features: {features}")
+        curr_max_score, curr_best_feature = search_instance(search, features, dataset, 1)
+        if curr_best_feature == None:
+            print("Error: No Best Feature Found")
+            break
+        features.remove(curr_best_feature)
+        search.remove(curr_best_feature)
+        print(f"Selected feature {curr_best_feature}.")
+        if curr_max_score > max_score: 
+            max_score = curr_max_score
+            best_features = features.copy()
+    return max_score, best_features  

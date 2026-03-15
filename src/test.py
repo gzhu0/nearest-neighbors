@@ -11,6 +11,6 @@ def read_data(path):
 data = read_data("data/data1.txt")
 print("read data")
 
-max_score, best_features  = algorithm.forward_search(data)
+max_score, best_features  = algorithm.backward_search(data)
 print(f"Max Score: {max_score}")
 print(f"Best Feature Set: {best_features}")
