@@ -1,3 +1,6 @@
+import time
+import numpy as np
+
 '''
 Nearest Neighbors Algorithm
 '''
@@ -9,9 +12,9 @@ def distance(a, b, features):
     total = 0
     for f in features:
         total += (a[f]-b[f])**2
-    return total**(1/2)
+    return total # Square root is omitted because of relativity
         
-def nearest_neighbor(point, data,features):
+def nearest_neighborA(point, data,features):
     '''
     Finds the nearest neighbr of a given data point
     '''
@@ -22,7 +25,18 @@ def nearest_neighbor(point, data,features):
         if curr_distance < nn_distance:
             nn_distance = curr_distance
             nn = d
-    return nn        
+    return nn      
+
+def nearest_neighborB(point, data,df,features):
+    '''
+    Finds the nearest neighbr of a given data point
+    '''
+    point = np.array([point[int(f)] for f in features]) # Convert the point into a numpy array
+    df = df - point # Subtract the point from every item
+    df = df ** 2 # Square every entry
+    df = np.sum(df,axis=1)
+    return data[np.argmin(df, axis=0)]
+
 
 def k_fold_validation(k, dataset, features):
     '''
@@ -43,8 +57,14 @@ def k_fold_validation(k, dataset, features):
             test = dataset[split_index:split_index+split_size]
             data = dataset[0:split_index] + dataset[split_index+split_size:]
         # Find the amount of correct for each split
+
+        df = np.array([[d[int(f)] for f in features] for d in data]) # Convert data into a numpy array
+        
         for test_item in test:
-            result = nearest_neighbor(test_item, data, features)
+            #start = time.perf_counter()
+            result = nearest_neighborB(test_item, data, df, features)
+            #end = time.perf_counter()
+            #print(f"Ran NN for a item. Time: {end - start:.5f}")
             if result[0] == test_item[0]: correct += 1
             total += 1
     return correct/total
@@ -66,8 +86,9 @@ def search_instance(search, features, dataset, search_type):
             features.add(i)
         else:
             features.remove(i)
+        print(f"Currently testing feature {i}")
         score = k_fold_validation(5, dataset, features)
-        print(f"Currently testing feature {i}. Score: {score}")
+        print(f"Score: {score}")
         if score > curr_max_score: 
             curr_max_score = score
             curr_best_feature = i
