@@ -14,7 +14,7 @@ def distance(a, b, features):
         total += (a[f]-b[f])**2
     return total # Square root is omitted because of relativity
         
-def nearest_neighborA(point, data,features):
+def nearest_neighbor_old(point, data,features):
     '''
     Finds the nearest neighbr of a given data point
     '''
@@ -27,7 +27,7 @@ def nearest_neighborA(point, data,features):
             nn = d
     return nn      
 
-def nearest_neighborB(point, data,df,features):
+def nearest_neighbor(point, data,df,features):
     '''
     Finds the nearest neighbr of a given data point
     '''
@@ -56,15 +56,13 @@ def k_fold_validation(k, dataset, features):
         else: 
             test = dataset[split_index:split_index+split_size]
             data = dataset[0:split_index] + dataset[split_index+split_size:]
+        
         # Find the amount of correct for each split
 
         df = np.array([[d[int(f)] for f in features] for d in data]) # Convert data into a numpy array
         
         for test_item in test:
-            #start = time.perf_counter()
-            result = nearest_neighborB(test_item, data, df, features)
-            #end = time.perf_counter()
-            #print(f"Ran NN for a item. Time: {end - start:.5f}")
+            result = nearest_neighbor(test_item, data, df, features)
             if result[0] == test_item[0]: correct += 1
             total += 1
     return correct/total
@@ -86,9 +84,9 @@ def search_instance(search, features, dataset, search_type):
             features.add(i)
         else:
             features.remove(i)
-        print(f"Currently testing feature {i}")
-        score = k_fold_validation(5, dataset, features)
-        print(f"Score: {score}")
+        score = k_fold_validation(5, dataset, features) 
+        score = round(score, 3)
+        print(f"Using feature(s) {features} accuracy is {score*100:.1f}%")
         if score > curr_max_score: 
             curr_max_score = score
             curr_best_feature = i
@@ -103,28 +101,35 @@ def forward_search(dataset):
     '''
     Forward Search that adds the feature that improves accuracy the most
     '''
+    search_data = {}
     features = set() # Current Features to Test
     search = set(range(1,len(dataset[0]))) # Current features to search
     max_score = 0
     best_features = None
     for x in range(len(search)):
-        print(f"On level {x} of the search tree. Current features: {features}")
+        #print(f"On level {x} of the search tree. Current features: {features}")
+        
         curr_max_score, curr_best_feature = search_instance(search, features, dataset, 0)
+
         if curr_best_feature == None:
             print("Error: No Best Feature Found")
             break
         features.add(curr_best_feature)
         search.remove(curr_best_feature)
-        print(f"Selected feature {curr_best_feature}.")
+        search_data[x] = ([list(features), curr_max_score]) # Store as data
+        
+        print(f"Feature set {features} was best, accuracy is {curr_max_score*100:.1f}%")
         if curr_max_score > max_score: 
             max_score = curr_max_score
             best_features = features.copy()
-    return max_score, best_features            
+
+    return max_score, best_features, search_data            
 
 def backward_search(dataset):
     '''
     Backwards search that elimates features to improve accuracy
     '''
+    search_data = {}
     features = set(range(1,len(dataset[0])))
     search = set(range(1,len(dataset[0]))) # Current features to search
     max_score = 0
@@ -137,8 +142,9 @@ def backward_search(dataset):
             break
         features.remove(curr_best_feature)
         search.remove(curr_best_feature)
-        print(f"Selected feature {curr_best_feature}.")
+        search_data[x] = ([list(features), curr_max_score]) # Store as data
+        print(f"Feature set {features} was best, accuracy is {curr_max_score*100:.1f}%")
         if curr_max_score > max_score: 
             max_score = curr_max_score
             best_features = features.copy()
-    return max_score, best_features  
+    return max_score, best_features, search_data  

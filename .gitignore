@@ -3,6 +3,7 @@ Large_data
 Small_data
 .vscode
 sources.md
+*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
