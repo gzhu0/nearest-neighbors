@@ -4,6 +4,8 @@ Small_data
 .vscode
 sources.md
 *.json
+graph.py
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

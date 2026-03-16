@@ -86,7 +86,7 @@ def search_instance(search, features, dataset, search_type):
             features.remove(i)
         score = k_fold_validation(5, dataset, features) 
         score = round(score, 3)
-        print(f"Using feature(s) {features} accuracy is {score*100:.1f}%")
+        #print(f"Using feature(s) {features} accuracy is {score*100:.1f}%")
         if score > curr_max_score: 
             curr_max_score = score
             curr_best_feature = i
@@ -106,7 +106,7 @@ def forward_search(dataset):
     search = set(range(1,len(dataset[0]))) # Current features to search
     max_score = 0
     best_features = None
-    for x in range(len(search)):
+    for x in range(1,len(search)+1):
         #print(f"On level {x} of the search tree. Current features: {features}")
         
         curr_max_score, curr_best_feature = search_instance(search, features, dataset, 0)
@@ -116,7 +116,7 @@ def forward_search(dataset):
             break
         features.add(curr_best_feature)
         search.remove(curr_best_feature)
-        search_data[x] = ([list(features), curr_max_score]) # Store as data
+        search_data[x] = [list(features), curr_max_score] # Store as data
         
         print(f"Feature set {features} was best, accuracy is {curr_max_score*100:.1f}%")
         if curr_max_score > max_score: 
@@ -132,10 +132,13 @@ def backward_search(dataset):
     search_data = {}
     features = set(range(1,len(dataset[0])))
     search = set(range(1,len(dataset[0]))) # Current features to search
+    # Get initial score and best features, which is all of them: 
     max_score = 0
     best_features = None
-    for x in range(len(search)):
-        print(f"On level {x} of the search tree. Current features: {features}")
+    for x in range(1,len(search)+1):
+        if len(features) <= 1:
+            break
+        #print(f"On level {x} of the search tree. Current features: {features}")
         curr_max_score, curr_best_feature = search_instance(search, features, dataset, 1)
         if curr_best_feature == None:
             print("Error: No Best Feature Found")
